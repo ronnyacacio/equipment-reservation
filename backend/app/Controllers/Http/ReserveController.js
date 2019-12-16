@@ -4,6 +4,8 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
+const Reserve = use('App/Models/Reserve');
+
 /**
  * Resourceful controller for interacting with reserves
  */
@@ -17,19 +19,10 @@ class ReserveController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
-  }
+  async index () {
+    const reserves = await Reserve.query().with('user').fetch();
 
-  /**
-   * Render a form to be used for creating a new reserve.
-   * GET reserves/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create ({ request, response, view }) {
+    return reserves;
   }
 
   /**
@@ -40,7 +33,12 @@ class ReserveController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store ({ request, auth }) {
+    const data = request.only(['equipment_id', 'dataReserva', 'dataEntrega']);
+      
+    const reserve = Reserve.create({ user_id: auth.user.id, ...data });
+
+    return reserve;
   }
 
   /**
@@ -52,30 +50,10 @@ class ReserveController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
-  }
+  async show ({ params }) {
+    const reserve = await Reserve.findOrFail(params.id);
 
-  /**
-   * Render a form to update an existing reserve.
-   * GET reserves/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit ({ params, request, response, view }) {
-  }
-
-  /**
-   * Update reserve details.
-   * PUT or PATCH reserves/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async update ({ params, request, response }) {
+    return reserve;
   }
 
   /**
@@ -86,7 +64,13 @@ class ReserveController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy ({ params, auth, response }) {
+    const reserve = await Reserve.findOrFail(params.id);
+
+    if(!auth.user.tipo)
+      return response.status(401);
+
+    await reserve.delete();
   }
 }
 

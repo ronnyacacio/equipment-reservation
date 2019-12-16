@@ -18,3 +18,8 @@ const Route = use('Route')
 
 Route.post('/register', 'AuthController.register');
 Route.post('/authenticate', 'AuthController.authenticate');
+
+Route.group(() => {
+    Route.resource('equipments', 'EquipmentController').apiOnly()
+    Route.resource('reserves', 'ReserveController').apiOnly().except('update');
+}).middleware('auth');

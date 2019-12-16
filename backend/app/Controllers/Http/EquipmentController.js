@@ -4,6 +4,8 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
+const Equipment = use('App/Models/Equipment');
+
 /**
  * Resourceful controller for interacting with equipment
  */
@@ -17,19 +19,10 @@ class EquipmentController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
-  }
+  async index () {
+    const equipments = await Equipment.all();
 
-  /**
-   * Render a form to be used for creating a new equipment.
-   * GET equipment/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create ({ request, response, view }) {
+    return equipments;
   }
 
   /**
@@ -40,7 +33,15 @@ class EquipmentController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store ({ request, auth, response }) {
+    const data = request.only(['nome', 'status']);
+
+    if(!auth.user.tipo)
+      return response.status(401);
+      
+    const equipment = Equipment.create(data);
+
+    return equipment;
   }
 
   /**
@@ -52,19 +53,10 @@ class EquipmentController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
-  }
+  async show ({ params }) {
+    const equipment = await Equipment.findOrFail(params.id);
 
-  /**
-   * Render a form to update an existing equipment.
-   * GET equipment/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit ({ params, request, response, view }) {
+    return equipment;
   }
 
   /**
@@ -75,7 +67,18 @@ class EquipmentController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update ({ params, request, auth, response }) {
+    const equipment = await Equipment.findOrFail(params.id);
+    const data = request.only(['nome', 'status']);
+    
+    equipment.merge(data);
+    
+    if(!auth.user.tipo)
+      return response.status(401);
+    
+    await equipment.save();
+
+    return equipment;
   }
 
   /**
@@ -86,7 +89,13 @@ class EquipmentController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy ({ params, request, auth, response }) {
+    const equipment = await Equipment.findOrFail(params.id);
+
+    if(!auth.user.tipo)
+      return response.status(401);
+
+    await equipment.delete();
   }
 }
 
